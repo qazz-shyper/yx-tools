@@ -1,7 +1,7 @@
 name: 构建
 on:
   workflow_dispatch:
-   inputs:
+    inputs:
       tag:
         description: '版本tag (例如 v1.2.3，留空则使用dev)'
         required: false
@@ -36,6 +36,25 @@ jobs:
       - name: Install fyne cli
         run: go install fyne.io/tools/cmd/fyne@latest
 
+      # 统一解析版本：git tag推送 > workflow_dispatch输入 > dev兜底
+      - name: Resolve VERSION variable
+        id: ver
+        run: |
+          set -euo pipefail
+          RAW_TAG=""
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            RAW_TAG="${{ github.ref_name }}"
+          elif [[ -n "${{ github.event.inputs.tag }}" ]]; then
+            RAW_TAG="${{ github.event.inputs.tag }}"
+          fi
+
+          if [[ -n "$RAW_TAG" ]]; then
+            VERSION="${RAW_TAG#v}"
+          else
+            VERSION="dev"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
       - name: 代码检查 vet & build cli
         run: |
           set -euo pipefail
@@ -43,10 +62,11 @@ jobs:
           go build ./cmd/yx
 
       - name: 编译原有CLI多平台二进制 ./cmd/yx
+        env:
+          VERSION: ${{ steps.ver.outputs.VERSION }}
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
-          [ -z "$VERSION" ] && VERSION=dev
+          VERSION="${{ env.VERSION }}"
           mkdir -p dist
           build() {
             local os=$1 arch=$2 ext=$3
@@ -59,16 +79,18 @@ jobs:
           ls -lh dist/
 
       - name: Build Android GUI APK
+        env:
+          VERSION: ${{ steps.ver.outputs.VERSION }}
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
-          [ -z "$VERSION" ] && VERSION=dev
+          VERSION="${{ env.VERSION }}"
           mkdir -p dist
           fyne_args=(
             --os android
             --app-id com.qaz.yxgui
           )
-          if [[ "$VERSION" != "dev" ]]; then
+          # 仅严格 x.y.z 三段数字版本才启用 --app-version
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             fyne_args+=(--app-version "${VERSION}")
           fi
           fyne package "${fyne_args[@]}" ./cmd/gui
@@ -76,6 +98,8 @@ jobs:
           ls -lh dist/
 
       - name: 打包压缩 & sha256校验
+        env:
+          VERSION: ${{ steps.ver.outputs.VERSION }}
         run: |
           set -euo pipefail
           cd dist
