@@ -31,7 +31,7 @@ jobs:
       - name: 设置Android环境变量
         run: |
           echo "ANDROID_HOME=${{ env.ANDROID_HOME }}" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=${{ env.ANDROID_HOME }}/ndk/26.2.11394342" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=${{ env.ANDROID_NDK_ROOT }}" >> $GITHUB_EN
 
       - name: Install fyne cli
         run: go install fyne.io/tools/cmd/fyne@latest
