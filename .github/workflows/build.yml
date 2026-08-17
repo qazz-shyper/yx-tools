@@ -35,11 +35,13 @@ jobs:
 
       - name: 代码检查 vet & build cli
         run: |
+          set -euo pipefail
           go vet ./cmd/yx
           go build ./cmd/yx
 
       - name: 编译原有CLI多平台二进制 ./cmd/yx
         run: |
+          set -euo pipefail
           VERSION="${GITHUB_REF_NAME#v}"
           [ -z "$VERSION" ] && VERSION=dev
           mkdir -p dist
@@ -55,6 +57,7 @@ jobs:
 
       - name: Build Android GUI APK
         run: |
+          set -euo pipefail
           VERSION="${GITHUB_REF_NAME#v}"
           [ -z "$VERSION" ] && VERSION=dev
           mkdir -p dist
@@ -65,14 +68,13 @@ jobs:
           if [[ "$VERSION" != "dev" ]]; then
             fyne_args+=(--app-version "${VERSION}")
           fi
-          # package输出到当前工作目录
           fyne package "${fyne_args[@]}" ./cmd/gui
-          # 默认输出文件名：app‑android.apk，移动重命名到dist
           mv app-android.apk dist/yx-gui-${VERSION}.apk
           ls -lh dist/
-          
+
       - name: 打包压缩 & sha256校验
         run: |
+          set -euo pipefail
           cd dist
           for f in yx_*; do
             case "$f" in
