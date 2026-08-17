@@ -59,10 +59,10 @@ jobs:
           [ -z "$VERSION" ] && VERSION=dev
           mkdir -p dist
           fyne package \
-            -os android \
-            -appID com.example.yxgui \
-            -version ${VERSION} \
-            -output dist/yx-gui-${VERSION}.apk \
+            --os android \
+            --app-id com.qaz.yxgui \
+            --app-version ${VERSION} \
+            -o dist/yx-gui-${VERSION}.apk \
             ./cmd/gui
           ls -lh dist/
 
