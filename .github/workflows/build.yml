@@ -1,8 +1,11 @@
 name: 构建
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
+   inputs:
+      tag:
+        description: '版本tag (例如 v1.2.3，留空则使用dev)'
+        required: false
+        default: ''
 permissions:
   contents: write
 jobs:
