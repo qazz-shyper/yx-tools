@@ -5,6 +5,7 @@ go 1.22
 require (
 	github.com/cheggaaa/pb/v3 v3.1.7
 	github.com/fatih/color v1.18.0
+    fyne.io/fyne/v2/v2 v2.8.0
 )
 
 require (
