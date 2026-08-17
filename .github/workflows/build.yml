@@ -1,16 +1,13 @@
 name: 构建
-
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   build:
-    name: 交叉编译全平台
+    name: 全平台二进制 + Android GUI APK
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,12 +17,27 @@ jobs:
           go-version: '1.22'
           cache: true
 
-      - name: 检查
+      # 安装Android SDK NDK，Fyne打包Android依赖
+      - name: Setup Android SDK NDK
+        uses: android-actions/setup-android@v3
+        with:
+          ndk-version: 26b
+
+      - name: 设置Android环境变量
+        run: |
+          echo "ANDROID_HOME=${{ env.ANDROID_HOME }}" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=${{ env.ANDROID_HOME }}/ndk/26.2.11394342" >> $GITHUB_ENV
+
+      # 安装fyne打包工具
+      - name: Install fyne cli
+        run: go install fyne.io/fyne/v2/cmd/fyne@latest
+
+      - name: 代码检查
         run: |
           go vet ./...
           go build ./...
 
-      - name: 编译
+      - name: 编译原有多平台二进制(CLI ./cmd/yx)
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           [ -z "$VERSION" ] && VERSION=dev
@@ -37,26 +49,35 @@ jobs:
               go build -trimpath -ldflags "-s -w -X main.version=$VERSION" \
               -o "dist/yx_${os}_${arch}${ext}" ./cmd/yx
           }
-          build linux   amd64 ''
-          build linux   arm64 ''
-          build linux   386   ''
-          build darwin  amd64 ''
-          build darwin  arm64 ''
           build windows amd64 '.exe'
-          build windows arm64 '.exe'
-          build freebsd amd64 ''
           ls -lh dist/
 
-      - name: 打包
+      # ========== Fyne编译Android APK ==========
+      - name: Build Android APK
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          [ -z "$VERSION" ] && VERSION=dev
+          mkdir -p dist
+          # package 命令输出apk；-appID 修改为你的包名，必须是反向域名格式
+          fyne package \
+            -os android \
+            -appID com.qaz.yxgui \
+            -version ${VERSION} \
+            -output dist/yx-gui-${VERSION}.apk \
+            ./cmd/gui
+          ls -lh dist/
+
+      - name: 打包压缩 & 校验sum
         run: |
           cd dist
           for f in yx_*; do
             case "$f" in
               *.exe) zip -q "${f%.exe}.zip" "$f" ;;
+              *.apk) ;;
               *)     tar -czf "$f.tar.gz" "$f" ;;
             esac
           done
-          sha256sum yx_* > checksums.txt
+          sha256sum * > checksums.txt
           ls -lh
 
       - uses: actions/upload-artifact@v4
@@ -71,5 +92,6 @@ jobs:
           files: |
             dist/*.tar.gz
             dist/*.zip
+            dist/*.apk
             dist/checksums.txt
           generate_release_notes: true
