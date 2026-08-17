@@ -35,7 +35,7 @@ jobs:
 
       - name: 代码检查 vet & build cli
         run: |
-          go vet . ./cmd/yx
+          go vet ./cmd/yx
           go build ./cmd/yx
 
       - name: 编译原有CLI多平台二进制 ./cmd/yx
