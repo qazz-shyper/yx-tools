@@ -52,20 +52,22 @@ jobs:
           }
           build windows amd64 '.exe'
           ls -lh dist/
-
       - name: Build Android GUI APK
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           [ -z "$VERSION" ] && VERSION=dev
           mkdir -p dist
-          fyne package \
-            --os android \
-            --app-id com.qaz.yxgui \
-            --app-version ${VERSION} \
-            -o dist/yx-gui-${VERSION}.apk \
-            ./cmd/gui
+          fyne_args=(
+            --os android
+            --app-id com.qaz.yxgui
+            --output dist/yx-gui-${VERSION}.apk
+          )
+          if [[ "$VERSION" != "dev" ]]; then
+            fyne_args+=(--app-version "${VERSION}")
+          fi
+          fyne package "${fyne_args[@]}" ./cmd/gui
           ls -lh dist/
-
+          
       - name: 打包压缩 & sha256校验
         run: |
           cd dist
