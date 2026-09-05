@@ -14,3 +14,10 @@ data/
 
 # 系统
 .DS_Store
+
+# 安卓
+android/app/build/
+android/app/libs/
+android/.gradle/
+local.properties
+*.apk

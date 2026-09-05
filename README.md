@@ -181,6 +181,14 @@ Windows 用「任务计划程序」调用 `yx.exe test ...` 即可。
 - `Cloudflare.txt` / `Cloudflare_ipv6.txt` — 缓存的官方 IP 段
 - `yx-cron.log` — 定时任务的输出（设了定时任务才有）
 
+## 安卓版
+
+在安卓手机上跑本工具：Go 引擎经 [gomobile](https://pkg.go.dev/golang.org/x/mobile) 编译进 APK，
+界面就是内嵌网页（WebView 加载本机服务），没有改任何测速逻辑。
+
+- 详见 [android/](android/) 与 [androidlib/](androidlib/)；Windows 上双击 [build-apk.bat](build-apk.bat) 一键构建
+- CI 自动出包：[.github/workflows/android.yml](.github/workflows/android.yml)，推 `v*` 标签会随 Release 发布 APK 并附 SHA-256 校验和，可自行核对
+
 ## 相关
 
 - [cfnew](https://github.com/byJoey/cfnew) — 配套的 Worker 面板
@@ -189,6 +197,8 @@ Windows 用「任务计划程序」调用 `yx.exe test ...` 即可。
 ## 致谢
 
 测速内核来自 [XIU2/CloudflareSpeedTest](https://github.com/XIU2/CloudflareSpeedTest)，MIT。
+
+安卓版由 [HERO-WPC](https://github.com/HERO-WPC) 贡献，TG：[@hero_wpc](https://t.me/hero_wpc)。
 
 ## 许可
 
